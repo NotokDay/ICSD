@@ -47,7 +47,7 @@ PORT      STATE SERVICE
 Nmap done: 1 IP address (1 host up) scanned in 50.15 seconds
 ```
 
-
+Run service scan on open ports. 
 ```
 ┌──(kali㉿kali)-[~/Captivity]
 └─$ nmap -p21,22,53,80,88,135,139,389,445,464,593,636,3268,3269,5357,5985,8000,9389,47001 -sC -sV -T5 192.168.100.130
@@ -139,6 +139,14 @@ Service detection performed. Please report any incorrect results at https://nmap
 Nmap done: 1 IP address (1 host up) scanned in 101.55 seconds
 ```
 
+## Enumerating Services 
+
+### FTP 
+
+Nmap identified a lot of open ports. Ports 88 (kerberos) and 389 (ldap) indicate that this machine is a domain controller. 
+
+Let's start service enumeration with port 21. As shown below, anonymous login is allowed for READ access. 
+
 ```
 ┌──(kali㉿kali)-[~/Captivity]
 └─$ ftp 192.168.100.130
@@ -167,14 +175,17 @@ ftp> exit
 221 Goodbye.
 ```
 
-winrar-x64-621.exe is vulnerable to CVE-2023-38831 
+Three .exe files are hosted on /setup directory. These won't give us anything useful other than information about the installed applications on the system. For example, winrar-x64-621.exe (version 6.21) is [vulnerable](https://alirodoplu.gitbook.io/ali-rodoplu/attack/exploit-the-winrar-cve-2023-38831) to CVE-2023-38831. If we find a way to exploit this, we may get command execution. 
 
-[link](https://alirodoplu.gitbook.io/ali-rodoplu/attack/exploit-the-winrar-cve-2023-38831). 
+### Web Services
+Web service running on port 80 requires windows authentication. We don't currently have any domain credentials, so we will pass it for now. Moreover, running fuzzers and other scans don't reveal anything interesting.   
+![Alt text](Screenshots/80_landing.png)
 
-![Alt text](image.png)
-![Alt text](image.png)
+Web service on port 8000 appears to be a file hosting application. It, too, requires authentication. 
+![Alt text](Screenshots/file-hosting-dashboard.png)
 
-![Alt text](image.png)
+However, attempting simple admin:admin let's us in. 
+
 
 ![Alt text](image.png)
 

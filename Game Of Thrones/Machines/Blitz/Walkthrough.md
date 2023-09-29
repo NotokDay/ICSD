@@ -397,7 +397,7 @@ git@blitz:~$
 ```
 
 ### Finding the Staging Repository and Build Script in Jenkins Dashboard 
-Git user's home directory contain several files that may be interesting. 
+Git user's home directory contains several files that may be interesting. 
 
 ![Alt text](Screenshots/git-ls-la.png)
 
