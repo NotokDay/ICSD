@@ -5,7 +5,7 @@ Blitz is a medium-level Linux machine with several vulnerabilities that, when co
 
 ## Enumerating the target 
 
-We first run nmap on all ports to find open ports. 
+Run a full-range port scan to find all open ports. 
 ```
 ┌──(kali㉿kali)-[~/Blitz]
 └─$ nmap -p- 192.168.100.131 
@@ -61,11 +61,6 @@ Moreover, checking for the version number (10.0.15 as nmap identified), we don't
 
 For now, let's shift our focus to the app running on port 8000. According to the service scan, this application is running on nodejs Express framework. 
 This is an important piece of information as we'll see later. 
-
-Let's fuzz the 
-```
-
-```
 
 Navigating to the application, we are welcomed with a login screen. 
 
