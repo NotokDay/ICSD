@@ -53,7 +53,7 @@ From the SSH banner, nmap identified the host as Ubuntu.
 
 ## Enumerating web services
 The web service running on port 443 turns out to be a Jenkins server. 
-![Alt text](SS/jenkins-landing.png)
+![Alt text](Screenshots/jenkins-landing.png)
 
 Jenkins is an open-source automation server used for building and deploying applications. However, at the moment, we don't have the credentials to access the server. 
 Moreover, checking for the version number (10.0.15 as nmap identified), we don't find anything interesting.
@@ -69,13 +69,13 @@ Let's fuzz the
 
 Navigating to the application, we are welcomed with a login screen. 
 
-![Alt text](SS/main-login.png)
+![Alt text](Screenshots/main-login.png)
 
 Let's create a new user account.
-![Alt text](SS/registration-test.png)
+![Alt text](Screenshots/registration-test.png)
 
 We can now log in. 
-![Alt text](SS/main-landing.png)
+![Alt text](Screenshots/main-landing.png)
 
 As we navigate through the site, it appears to be a static website about some furniture brand. 
 
@@ -109,7 +109,7 @@ by Ben "epi" Risher 🤓                 ver: 2.10.0
 301      GET       10l       16w      179c http://192.168.100.131:8000/images => http://192.168.100.131:8000/images/
 302      GET        1l        4w       34c http://192.168.100.131:8000/contact => http://192.168.100.131:8000/auth/signin
 301      GET       10l       16w      171c http://192.168.100.131:8000/js => http://192.168.100.131:8000/js/
-301      GET       10l       16w      173c http://192.168.100.131:8000/css => http://192.168.100.131:8000/css/
+301      GET       10l       16w      173c http://192.168.100.131:8000/css => http://192.168.100.131:8000/cScreenshots/
 302      GET        1l        4w       34c http://192.168.100.131:8000/blog => http://192.168.100.131:8000/auth/signin
 301      GET       10l       16w      181c http://192.168.100.131:8000/uploads => http://192.168.100.131:8000/uploads/
 302      GET        1l        4w       34c http://192.168.100.131:8000/upload => http://192.168.100.131:8000/auth/signin
@@ -139,14 +139,14 @@ We find several interesting endpoints, including /upload, /uploads and /admin.
 ## File upload endpoint
 
 It seems like we can upload files to the server. 
-![Alt text](SS/file-upload-1.png)
+![Alt text](Screenshots/file-upload-1.png)
 
 Uploading a test.txt, file we get "File uploaded successfully!" message. 
-![Alt text](SS/file-upload-2.png)
+![Alt text](Screenshots/file-upload-2.png)
 
 By clicking "Download" or "Delete" buttons, we can download or delete the files. It is important to check if those features are vulnerable to directory traversal. For this, we will intercept the traffic by Burp and analyze the requests.  
 
-![Alt text](SS/file-upload-3.png)
+![Alt text](Screenshots/file-upload-3.png)
 
 Download function calls the /uploads/file_name endpoint for each file (for the delete function, it is /delete/file_name). This feature appears to have been implemented securely and no sensitive data could be leaked.
 
@@ -157,11 +157,11 @@ Download function calls the /uploads/file_name endpoint for each file (for the d
 ## Admin Endpoints and Broken Access Control
 During directory fuzzing, we discovered an /admin endpoint that could be interesting. However, upon attempting to access the page, we get "Access Denied" error indicating our user does not have enough privileges to access the page. 
 
-![Alt text](SS/admin-access-denied.png)
+![Alt text](Screenshots/admin-access-denied.png)
 
 The server decided not to allow us based on our privilege level. Generally this is done via session headers or cookies containing session tokens. To check what cookies are saved for this application we will use developer tools.  
 
-![Alt text](SS/jwt-1.png)
+![Alt text](Screenshots/jwt-1.png)
 
 And not surprisingly, under "Storage > Cookies" section we find accessToken cookie containing a JWT token.
 
@@ -169,12 +169,12 @@ JWT tokens contain information about the current session of the user. Therefore,
 
 Header and payload sections of the tokens are base64 encoded, so we can see what is claimed inside of them. We will use jwt.io for this purpose, but any platform with base64 decoding feature can be used. 
 
-![Alt text](SS/jwt-2.png)
+![Alt text](Screenshots/jwt-2.png)
 
 It looks like our token contains 2 custom values: *id*, *isAdmin*. As we are not an admin, isAdmin is set to false and we are rejected from seeing /admin page. 
 
 Let's change the isAdmin value from _false_ to _true_.
-![Alt text](SS/jwt-3.png) 
+![Alt text](Screenshots/jwt-3.png) 
 
 As expected, the signature part of the token is changed as the token is tampered. The new token is signed by "your-256-bit-secret" provided by jwt.io.
 
@@ -184,7 +184,7 @@ You can read the difference between the two [here](https://community.auth0.com/t
 
 Let's now replace the original token with our new 'forged' token and refresh the page. 
 
-![Alt text](SS/admin-panel-landing.png)
+![Alt text](Screenshots/admin-panel-landing.png)
 
 Voilà! We get access to admin panel!
 
@@ -303,16 +303,16 @@ listening on [any] 443 ...
 ```
 
 Intercept the POST request using Burp's Proxy. 
-![Alt text](SS/sql-0-intercept.png)
+![Alt text](Screenshots/sql-0-intercept.png)
 
 Using the method described in the link above. 
 * Create a new table
 
-![Alt text](SS/sql-1-create-table.png)
+![Alt text](Screenshots/sql-1-create-table.png)
 
 * Execute commands
 
-![Alt text](SS/sql-2-rce.png)
+![Alt text](Screenshots/sql-2-rce.png)
 
 
 And we receive a reverse shell as the postgres user!
@@ -336,7 +336,7 @@ ICSD{2c3db304eedeff55b9a860f284729f89}
 ### Finding Credentials for git
 Looking for things that may help us escalate our privileges, we find /opt/Blitz directory. This directory serves as the root directory from which the Blitz app we've just exploited is launched.
 
-![Alt text](SS/prod-web-root.png)
+![Alt text](Screenshots/prod-web-root.png)
 We immediately notice a .env file in the folder. This file generally contains sensitive information such as environment variables:
 ```
 postgres@blitz:/opt/Blitz$ cat .env
@@ -404,15 +404,15 @@ git@blitz:~$
 ### Finding the Staging Repository and Build Script in Jenkins Dashboard 
 Git user's home directory contain several files that may be interesting. 
 
-![Alt text](SS/git-ls-la.png)
+![Alt text](Screenshots/git-ls-la.png)
 
 Inside the git-server/staging directory we find git backend files. This indicates that the directory is a bare repository and that we can clone/pull/push to this repo. 
 
-![Alt text](SS/git-gitserver-staging.png)
+![Alt text](Screenshots/git-gitserver-staging.png)
 
 There's also pipeline directory owned by jenkins user. This is probably the build directory used by the jenkins. 
 
-![Alt text](SS/git-pipeline-staging.png)
+![Alt text](Screenshots/git-pipeline-staging.png)
 
 Let's now clone the directory and look at its contents. 
 ```
@@ -434,14 +434,14 @@ addAdmin.req  staging  test.txt
 We have successfully cloned the repository. However, before moving on with the repo, let's look at how jenkins build the app. 
 
 Use the credentials found earlier. 
-![Alt text](SS/jenkins-login-screen.png)
+![Alt text](Screenshots/jenkins-login-screen.png)
 
 There seems to be only one application configured for build (EDGECUT - Staging). 
-![Alt text](SS/jenkins-dashboard.png)
+![Alt text](Screenshots/jenkins-dashboard.png)
 
 On the application menu, we find "Configure" section that reveals build script. 
 
-![Alt text](SS/jenkins-app-dashboard.png)
+![Alt text](Screenshots/jenkins-app-dashboard.png)
 
 ```
 pipeline {
@@ -509,7 +509,7 @@ The service is run as node user. So changing the source code, pushing the code t
 
 Reverse shell function is from [revshells](https://www.revshells.com/).
 
-![Alt text](SS/source-code-1.png)
+![Alt text](Screenshots/source-code-1.png)
 
 Start a listener. 
 
@@ -556,7 +556,7 @@ Please rebuild the application after changes.
 ```
 Click "Build Now". 
 
-![Alt text](SS/jenkins-build.png)
+![Alt text](Screenshots/jenkins-build.png)
 
 And we receive a reverse shell as user node!
 ```
@@ -577,7 +577,7 @@ ICSD{ede5159c9ab5d81b2f66e177599c8b65}
 ### Shortcut from Jenkins to Node without Interacting with The Staging Repository
 What jenkins does in build scripts is to simply run commands specified in script/sh section, providing us command execution on the system as jenkins user. We also now that pipeline/staging directory is owned by jenkins, meaning we can change the code (app.js as shown above) directly from the command line. 
 
-![Alt text](SS/git-pipeline-staging.png)
+![Alt text](Screenshots/git-pipeline-staging.png)
 
 We are also allowed to restart the service. 
 ```
