@@ -6,13 +6,13 @@ Within the framework of the event, which took place on September 21-23, 2023, a 
 
 CyberYashma emerged as the winner of the competition, scoring 220 out of 600 possible points. The second-place team - DoublePulsar and the third-place team - ALLSAFE both achieved a score of 110.
 
-In this repository, we will share all the materials that we used during the CTF to express our appreciation for open source. Moreover, to support this idea, we have used one easy machine from [vulnhub](https://www.vulnhub.com/entry/election-1,503/)!
+In this repository, we will share all the materials that we used during the CTF to express our appreciation for open source. Moreover, to support this idea, we have used one easy machine from [vulnhub](https://www.vulnhub.com/entry/election-1,503/) (Callobes)!
 
 # General Information
-Machines were categorized as easy, medium, and hard. Each easy machine provided 50 points, each medium machine 100 points, and each hard machine 150 points, adding up to a total of 600 points. Moreover, competitors were able to access an ELK server where all HTTP logs, as well as each command run on attack boxes, were logged (to read more, please refer to [architecture section](https://github.com/NotokDay/ICSD/tree/main/Game%20Of%20Thrones/Architecture)). This, in theory, should have helped teams find the exact ways other teams exploited the machines and redo the steps to obtain the flags. This way, teams with better overall offensive and defensive skills would come out on top.
+6 vulnerable machines were presented to competitors. Machines were categorized as easy, medium, and hard. Each easy machine provided 50 points, each medium machine 100 points, and each hard machine 150 points, adding up to a total of 600 points. Moreover, competitors were able to access an ELK server where all HTTP logs, as well as each command run on attack boxes, were logged (to read more, please refer to [architecture section](https://github.com/NotokDay/ICSD/tree/main/Game%20Of%20Thrones/Architecture)). This, in theory, should have helped teams find the exact ways other teams exploited the machines and redo the steps to obtain the flags. This way, teams with better overall offensive and defensive skills would come out on top.
 
 > [!NOTE]  
-> In addition to the primary challenges, we introduced a secondary challenge: competitors were given the option to destroy the machines (for example detele the important system files, block network access etc.) they had successfully exploited. However, there were consequences for this action.
+> In addition to the primary challenges, we introduced a secondary challenge: competitors were given the option to destroy the machines (for example delete important system files, block network access etc.) they had successfully exploited. However, there were consequences for this action.
 > If other teams detected the destruction of a machine, they would be rewarded with an additional 50 points. On the other hand, the team that destroyed the machine would face a penalty of 20 points and a ban from accessing that specific machine.
 > During the CTF, a couple of such incidents occurred where teams did damage the CTF machines. However, none were detected. 
 
@@ -29,6 +29,11 @@ Machines were categorized as easy, medium, and hard. Each easy machine provided 
 
 Unfortunately, the other 5 teams scored 0 points. 
 
+During the competition, several hints were shared at random time intervals for each machine. These hints even included credentials for the gitlab machine in the format root:base64(password) and 2 CVE numbers! 
+
+The fact that five teams were unable to score any points can be primarily attributed to their limited experience in CTF competitions. It's crucial to stress that this environment is simulated and can be quite challenging, not exactly mirroring real-world penetration testing experiences. Consequently, lower scores should not be seen as indicative of anyone's inability to perform penetration tests or blue teaming effectively.
+
+In general, we recommend everyone interested in cybersecurity to research and experience more. 
 
 # Some moments from the competition
 ![BAH_7833-min](https://github.com/NotokDay/ICSD/assets/115024808/fa85fe5b-1b6d-43a7-9aa7-98a07c38a7a5)
