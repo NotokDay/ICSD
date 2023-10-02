@@ -14,11 +14,18 @@ ___
 ![photo_5249282619873546109_y](https://github.com/NotokDay/ICSD/assets/115024808/6411fa2d-f4bb-4508-a908-d718eab84acf)
 ___
 ![0W1A1434](https://github.com/NotokDay/ICSD/assets/115024808/ddff6716-b967-438a-bc29-ce7f85a88884)
+___
 ![BAH_7814](https://github.com/NotokDay/ICSD/assets/115024808/de1ae2cc-9729-4b0e-a6b3-59a999ee94a1)
+___
 ![BAH_7820](https://github.com/NotokDay/ICSD/assets/115024808/bf2825fb-5fdf-4313-b418-def915b15228)
+___
 ![BAH_7822](https://github.com/NotokDay/ICSD/assets/115024808/91796163-fb4e-4aed-b93d-6a86166ffc4d)
+___
 ![BAH_7830](https://github.com/NotokDay/ICSD/assets/115024808/fc487ab8-2435-4f7a-97b4-c3422e1dcaab)
+___
 ![photo_5249282619873546121_y(1)](https://github.com/NotokDay/ICSD/assets/115024808/68ef86cc-6afc-4b37-a065-a156b722381c)
+___
 ![BAH_7813](https://github.com/NotokDay/ICSD/assets/115024808/8a17e7b2-a72d-4db7-af07-4bc0990f038b)
+___
 ![photo_5249282619873546109_y](https://github.com/NotokDay/ICSD/assets/115024808/dd44b8c9-6273-4c6e-a280-9d1b31109c6b)
 
