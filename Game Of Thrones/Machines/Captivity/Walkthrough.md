@@ -336,7 +336,7 @@ Now, import the data (20231002044231_BloodHound.zip) by drag and dropping.
 
 ### Finding Vulnerable Domain Objects via BloodHound Analysis
 
-Bloodhound is a great tool to analyze domain object relations and possibly find misconfigurations. For example, in the analysis section we can find many pre-built queries that find known mistakes done by system admins.
+Bloodhound is a great tool to analyze domain object relations and possibly find misconfigurations. For example, in the analysis section we can find many pre-built queries that find known mistakes made by system admins.
 
 ![Alt text](Screenshots/bloodhound-analysis.png)
 
