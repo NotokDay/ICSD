@@ -86,10 +86,11 @@ RUN apt-get update \
 
 Another requirement to prevent cheating and make competition more competitive was to regenerate flags on platform and on vulnerable machines at same time. We achieved this by adding following cron entries to crontab:  
  
-'''
+```
 */2 * * * * bash /home/ctf-platform/Desktop/CTFd/CTFd/api/v1/ctfd_scripts/overwrite_scripts/total_overwrite.sh
 */30 * * * * python3 /home/ctf-platform/Desktop/CTFd/CTFd/api/v1/ctfd_scripts/db_flag_regeneration.py --all
-''' 
+
+``` 
 
 `total_overwrite.sh` and `db_flag_regeneration.py` files are located in folder root in repository. We reinsert flags to machines every two minutes (without regenerating) and regenerate the flags in DB by using CTFd API every thirty mintues and on successful flag submission by team (by adding following line to 'CTFd/CTFd/api/v1/challenges.py' (pasting it just after the previous subprocess call we added for completion_checker.sh )) : 
 
