@@ -409,6 +409,10 @@ There are [many ways](https://book.hacktricks.xyz/windows-hardening/active-direc
 
 To interact with AD CS, we will use a great open source tool [Certify](https://github.com/GhostPack/Certify) by [harmj0y](https://twitter.com/harmj0y) and [tifkin_](https://twitter.com/tifkin_). The '/vulnerable' option checks for misconfigured certificate templates; however, we didn't find any. Nevertheless, since we are a member of 'Certificate Authority Admins,' we may have permissions to issue another certificate or modify certificate permissions.
 
+> [!IMPORTANT]  
+> Pre-compiled tools may not be compatible with the current machine. It is recommended to re-build both Certify and Rubeus on your local machine using Visual Studio.
+> If you do so, don't forget to choose "Release" and "any CPU" options.   
+
 ```
 *Evil-WinRM* PS C:\Users\ca_admin\Documents> .\certify.exe find /vulnerable
 
