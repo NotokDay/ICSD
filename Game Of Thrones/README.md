@@ -8,6 +8,14 @@ CyberYashma emerged as the winner of the competition, scoring 220 out of 600 pos
 
 In this repository, we will share all the materials that we used during the CTF to express our appreciation for open source. Moreover, to support this idea, we have used one easy machine from [vulnhub](https://www.vulnhub.com/entry/election-1,503/)!
 
+# General Information
+Machines were categorized as easy, medium, and hard. Each easy machine provided 50 points, each medium machine 100 points, and each hard machine 150 points, adding up to a total of 600 points. Moreover, competitors were able to access an ELK server where all HTTP logs, as well as each command run on attack boxes, were logged (to read more, please refer to [architecture section](https://github.com/NotokDay/ICSD/tree/main/Game%20Of%20Thrones/Architecture)). This, in theory, should have helped teams find the exact ways other teams exploited the machines and redo the steps to obtain the flags. This way, teams with better overall offensive and defensive skills would come out on top.
+
+> [!NOTE]  
+> In addition to the primary challenges, we introduced a secondary challenge: competitors were given the option to destroy the machines they had successfully exploited. However, there were consequences for this action.
+> If other teams detected the destruction of a machine, they would be rewarded with an additional 50 points. On the other hand, the team that destroyed the machine would face a penalty of 20 points and a ban from accessing that specific machine.
+
+
 # Standings
 
 | Teams/Machines | Callobes | Gitlab | Bytescribe | Captivity | Blitz | Noteapp | Total |
