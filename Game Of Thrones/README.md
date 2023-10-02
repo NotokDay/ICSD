@@ -8,6 +8,19 @@ CyberYashma emerged as the winner of the competition, scoring 220 out of 600 pos
 
 In this repository, we will share all the materials that we used during the CTF to express our appreciation for open source. Moreover, to support this idea, we have used one easy machine from [vulnhub](https://www.vulnhub.com/entry/election-1,503/)!
 
+# Standings
+
+| Teams/Machines | Callobes | Gitlab | Bytescribe | Captivity | Blitz | Noteapp | Total |
+|  :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  CyberYashma | 20 30 | 20 30 | 30 30 - | 30 30 - | - - - - | - - - |  220 |
+|  DoublePulsar | 20 30 | - - | 30 30 - | - - - | - - - - | - - - |  110 |
+|  ALLSAFE | 20 30 | - - | 30 30 - | - - - | - - - - | - - - |  110 |
+|  CBAR_TEAM | 20 30 | 20 30 | - - - | - - - | - - - - | - - - |  100 |
+|  ExploitationUnit | 20 30 | 20 30 | - - - | - - - | - - - - | - - - |  50 |
+
+Unfortunately, the other 5 teams scored 0 points. 
+
+
 # Some moments from the competition
 ![BAH_7833-min](https://github.com/NotokDay/ICSD/assets/115024808/fa85fe5b-1b6d-43a7-9aa7-98a07c38a7a5)
 ___
