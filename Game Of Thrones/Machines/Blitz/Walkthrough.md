@@ -544,7 +544,7 @@ To 192.168.100.131:/home/git/git-server/staging
    8f9f043..2fa3c62  master -> master
 ```
 
-Message we found earlier mentioned that new commits do not trigger the build. Since we have change code in the repo, we should manually rebuild the app. 
+Message we found earlier mentioned that new commits do not trigger the build. Since we have changed code in the repo, we should manually rebuild the app. 
 ```
 P.S. The jenkins doesn't listen for new commits. 
 Please rebuild the application after changes. 

