@@ -630,7 +630,7 @@ Enter Export Password:
 Verifying - Enter Export Password:
 ```
 
-Now, we are using Rubeus to request a TGT for the administrator user. While we could pass the generated ticket to our session, we will instead utilize /getcredentials and /show options to obtain the hash of the administrator user.
+Let's use Rubeus to request a TGT for the administrator user. While we could pass the generated ticket to our session, we will instead utilize /getcredentials and /show options to obtain the hash of the administrator user.
 
 
 ```
