@@ -1,4 +1,9 @@
 # Callobes
+
+This machine is taken from [Vulnhub](https://www.vulnhub.com/entry/election-1,503/) to support the idea of open source! We intend to continue sharing our projects as open source in the future.
+
+There are several ways to exploit the machine, and we are currently sharing one method. You are encouraged to explore and discover other paths independently.
+
 ## High Level Overview
 "Callobes" is a Linux-based easy Capture The Flag (CTF) machine that presents an engaging and challenging cybersecurity scenario. Here's a brief overview:
 This machine features both a web server and an SSH server. The web server has Path Traversal vulnerability hiding a crucial piece of information, specifically credentials, within a file. 
