@@ -3,7 +3,7 @@
 1. Use the installation link to download the .ova file.
 2. Import the image file to VMware using File -> Open 
 
-![Alt text](Screenshots\image-1.png)
+![Alt text](Screenshots/image-1.png)
 
 > [!WARNING]  
 > The images are not supported by virtualbox. 
