@@ -1,10 +1,10 @@
 # 'Game of Thrones' - Capture the Flag
 
-As PROSOL, we had the opportunity to host the ICSD-2023 conference - the international event dedicated to cybersecurity days for the third time! The event was co-hosted by PROSOL and the Special Communication and Information Security State Service of the Republic of Azerbaijan.
+As PROSOL, we had the opportunity to host the ICSD 2023 conference - an event dedicated to cybersecurity days for the third time! The event was co-hosted by PROSOL and the State Service for Special Communication and Information Security.
 
 Within the framework of the event, which took place on September 21-23, 2023, a CTF competition in the format of "Game of Thrones" was organized by the hosts. According to the event schedule, the competition took place on September 22 and lasted for 6 hours. Ten teams, each consisting of three members, competed for a prize pool totaling 3000AZN and additional exciting prizes.
 
-CyberYashma emerged as the winner of the competition, scoring 220 out of 600 possible points. The second-place team - DoublePulsar and the third-place team - ALLSAFE both achieved a score of 110.
+CyberYashma emerged as the winner of the competition, scoring 220 out of 600 possible points. The second and third place teams (DoublePulsar and ALLSAFE) both achieved a score of 110.
 
 In this repository, we will share all the materials that we used during the CTF to express our appreciation for open source. Moreover, to support this idea, we have used one easy machine from [vulnhub](https://www.vulnhub.com/entry/election-1,503/) (Callobes)!
 
@@ -33,7 +33,6 @@ During the competition, several hints were shared at random time intervals for e
 
 The fact that five teams were unable to score any points can be primarily attributed to their limited experience in CTF competitions. It's crucial to stress that this environment is simulated and can be quite challenging, not exactly mirroring real-world penetration testing experiences. Consequently, lower scores should not be seen as indicative of anyone's inability to perform penetration tests or blue teaming effectively.
 
-In general, we recommend everyone interested in cybersecurity to research and experience more. 
 
 # Some moments from the competition
 ![BAH_7833-min](https://github.com/NotokDay/ICSD/assets/115024808/fa85fe5b-1b6d-43a7-9aa7-98a07c38a7a5)
