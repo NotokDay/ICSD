@@ -2,7 +2,7 @@
 
 ## High Level Overview
 
-GitLab is a easy-level Linux machine with several vulnerabilities that, when combined, grant us root access to the system. Upon checking the robots.txt file in the website, We find a list of password credentials in which these can be used to brute force the login page as a root user. From there, we discover a vulnerable GitLab Version 16.0.0 to Arbitrary File Read. After that we can view the /etc/passwd file in which it contains the hash of the plumber user. After brute forcing this hash via using `john` tool, we find the password and connect to this host via SSH. We make use of misconfigured pax to read the app.file in the root folder. Then we generate a specific CURL request to obtain an elevated shell.
+GitLab is an easy-level Linux machine with several vulnerabilities that, when combined, grant us root access to the system. Upon checking the robots.txt file in the website, we find a wordlist. This wordlist can be used to brute force the login page as a root user. (We have also shared the root password as a hint during the competition). From there, we discover GitLab version 16.0.0 which is vulnerable to arbitrary file read vulnerability. After that we can view the /etc/passwd file that contains the hash of the plumber user. After brute forcing this hash via using `john` tool, we find the password and connect to this host via SSH. We make use of misconfigured pax to read the app.file in the root folder. Then we generate a specific CURL request to obtain an elevated shell.
 
 # Recon
 
@@ -125,7 +125,7 @@ Using this credentials, we can SSH into the “plumber” user.
 
 ![https://i.ibb.co/5Fzy4D5/SSH-TO-PLUMBER.png](https://i.ibb.co/5Fzy4D5/SSH-TO-PLUMBER.png)
 
-Let’s look at the Listening Ports via using the following command.
+Let’s look at the listening ports by using the following command.
 
 ```jsx
 netstat -tulnp
