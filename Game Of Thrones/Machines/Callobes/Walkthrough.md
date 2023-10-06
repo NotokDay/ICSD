@@ -26,7 +26,7 @@ Nmap found two tcp ports (22, 80)
 
 Navigating to the IP address in a browser we see the following.
 
-![Alt text](Screenshots\image-2.png)
+![Alt text](Screenshots/image-2.png)
 
 let’s run a dirbuster:
 ```
@@ -60,7 +60,7 @@ As seen above we see a directory named robots.txt.
 
 First, navigate to the robots.txt file. We have four words in the robots.txt directory, as seen below. 
 
-![Alt text](Screenshots\image-3.png)
+![Alt text](Screenshots/image-3.png)
 
 We just only have access to the Shimishao directory.
 
@@ -107,10 +107,10 @@ GENERATED WORDS: 4612
 As seen above, we can see shmishao/admin/logs directory which is useful for us.
 Let's try directly access this directory:
 
-![Alt text](Screenshots\image-4.png)
+![Alt text](Screenshots/image-4.png)
 
 We see system.log file . Install this and see what we found.
-![Alt text](Screenshots\image-5.png)
+![Alt text](Screenshots/image-5.png)
 
 As seen above we got our credentials for the ubuntu user pred8or. Now we can use these credentials to log in ssh. 
 
@@ -180,7 +180,7 @@ pred8or@shimishao:/$ find / -perm -u=s -type f 2>/dev/null
 
 Following the execution of the specified command, we have identified the Serv-U with suid (Set User ID) permissions. Let's google it and see what vulnerability we find.
 
-![Alt text](Screenshots\image-6.png)
+![Alt text](Screenshots/image-6.png)
 
 In Exploit-DB "Serv-U FTP Server < 15.1.7 - Local Privilege Escalation" we found vulnerable version.
 
