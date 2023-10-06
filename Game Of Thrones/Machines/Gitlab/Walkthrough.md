@@ -2,7 +2,7 @@
 
 ## High Level Overview
 
-GitLab is a high-level Linux machine with several vulnerabilities that, when combined, grant us root access to the system. Upon checking the robots.txt file in the website, We find a list of password credentials in which these can be used to brute force the login page as a root user. From there, we discover a vulnerable GitLab Version 16.0.0 to Arbitrary File Read. After that we can view the /etc/passwd file in which it contains the hash of the plumber user. After brute forcing this hash via using `john` tool, we find the password and connect to this host via SSH. We make use of misconfigured pax to read the app.file in the root folder. Then we generate a specific CURL request to obtain an elevated shell.
+GitLab is a easy-level Linux machine with several vulnerabilities that, when combined, grant us root access to the system. Upon checking the robots.txt file in the website, We find a list of password credentials in which these can be used to brute force the login page as a root user. From there, we discover a vulnerable GitLab Version 16.0.0 to Arbitrary File Read. After that we can view the /etc/passwd file in which it contains the hash of the plumber user. After brute forcing this hash via using `john` tool, we find the password and connect to this host via SSH. We make use of misconfigured pax to read the app.file in the root folder. Then we generate a specific CURL request to obtain an elevated shell.
 
 # Recon
 
