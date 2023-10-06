@@ -77,7 +77,9 @@ Desktop  Documents  Downloads  hidden.txt  Music  Pictures  Public  Templates  V
 ```
 
 To decode this I used https://dencode.com/ 
+
 ![image](Screenshots/Screenshot-2023-10-06-035333.png)
+
 From the results, it is obvious that, it is encoded via Base45 method and it contains credentials: 
 **bytescribe:4vrf%BTG**
 
