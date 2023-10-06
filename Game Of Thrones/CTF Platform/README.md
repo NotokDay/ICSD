@@ -57,7 +57,47 @@ The second feature that we developed was a notification system to alert the staf
 
 In five minutes after the notification is received, firewall rules are updated to disable team Attacbox's access to the finished machine.  
 
-For achieving this kind of functionality, first we created a Telegram Bot using BotFather. Then, we somehow needed to create a script to check status of completed challenges by team in every successful flag submission and in case of completion notify us through Telegram. We developed script called `completion_checker.sh` which you can view in this repository/folder.  This script is added to `CTFd/CTFd/api/v1/ctfd_scripts` folder and called in `CTFd/CTFd/api/v1/challenges.py' (https://github.com/CTFd/CTFd/blob/master/CTFd/api/v1/challenges.py) as following (added to 637th line) : 
+For achieving this kind of functionality, first we created a Telegram Bot using BotFather. Then, we somehow needed to create a script to check status of completed challenges by team in every successful flag submission and in case of completion notify us through Telegram. We developed script called `completion_checker.sh` which you can view in this repository/folder. Script uses the REST API provided by CTFd to retrieve the data about the completed challenge, checks if team has completed all challenges in same machine that submitted challenge belongs to, and in case of full completion, sends message to our Telegram group via notifier bot. The full code of script is displayed below:
+
+```
+#!/bin/bash
+
+team_id=$1
+team_name=$2
+challenge_category=$3
+
+if [ $# -ne 3 ]; then
+	exit 1
+fi
+
+challenge_ids=($(curl -sS -X GET http://localhost:8000/api/v1/challenges?category=$challenge_category --header "Authorization: Token ctfd_sampletoken" --header "Content-Type: application/json"  | jq -r '.data[].id'))
+
+allChallengesOfMachineCompleted=true
+
+for id in "${challenge_ids[@]}"; do
+
+submission_result_count=$(curl -sS -X GET "http://localhost:8000/api/v1/submissions?team_id=${team_id}&challenge_id=${id}&type=correct" --header "Authorization: Token ctfd_sampletoken" --header "Content-Type: application/json" | jq -r '.meta.pagination.total')
+
+if [ "$submission_result_count" -ne 1 ]; then
+	allChallengesOfMachineCompleted=false
+fi
+
+done
+
+if [ ${#challenge_ids[@]} -eq 0 ]; then
+
+allChallengesOfMachineCompleted=false
+
+fi
+
+if [ "$allChallengesOfMachineCompleted" = true ]; then
+
+curl -sS -X GET "https://api.telegram.org/botTokenProvidedByTelegram/sendMessage?chat_id=groupChatIdHere&text=Team_$(echo $team_id)_finished_machine_$(echo $challenge_category)"
+
+fi
+```
+
+This script is added to `CTFd/CTFd/api/v1/ctfd_scripts` folder and called in `CTFd/CTFd/api/v1/challenges.py' (https://github.com/CTFd/CTFd/blob/master/CTFd/api/v1/challenges.py) as following (added to 637th line) : 
 
 ```
 subprocess.run(['/opt/CTFd/CTFd/api/v1/ctfd_scripts/completion_checker.sh',f"{team.id}", f"{team.name}", f"{challenge.category}"])
@@ -92,9 +132,98 @@ Another requirement to prevent cheating and make competition more competitive wa
 
 ``` 
 
-`total_overwrite.sh` and `db_flag_regeneration.py` files are located in folder root in repository. We reinsert flags to machines every two minutes (without regenerating) and regenerate the flags in DB by using CTFd API every thirty mintues and on successful flag submission by team (by adding following line to 'CTFd/CTFd/api/v1/challenges.py' (pasting it just after the previous subprocess call we added for completion_checker.sh )) : 
+`total_overwrite.sh` and `db_flag_regeneration.py` files are located in folder root in repository. 
 
+total_overwrite.sh script just executes overwriter python script for each machine in background:
+
+```
+python3 /home/ctf-platform/Desktop/CTFd/CTFd/api/v1/ctfd_scripts/overwrite_scripts/blitz_overwrite.py &
+python3 /home/ctf-platform/Desktop/CTFd/CTFd/api/v1/ctfd_scripts/overwrite_scripts/captivity_overwrite.py &
+python3 /home/ctf-platform/Desktop/CTFd/CTFd/api/v1/ctfd_scripts/overwrite_scripts/bytescribe_overwrite.py &
+python3 /home/ctf-platform/Desktop/CTFd/CTFd/api/v1/ctfd_scripts/overwrite_scripts/bytescribe_docker_overwrite.py &
+python3 /home/ctf-platform/Desktop/CTFd/CTFd/api/v1/ctfd_scripts/overwrite_scripts/noteapp_overwrite.py &
+python3 /home/ctf-platform/Desktop/CTFd/CTFd/api/v1/ctfd_scripts/overwrite_scripts/gitlab_overwrite.py &
+python3 /home/ctf-platform/Desktop/CTFd/CTFd/api/v1/ctfd_scripts/overwrite_scripts/callobes_overwrite.py &
+
+```
+
+Each overwriter script is similar to each other, you can view the full source code for script in blitz_overwrite.py file located in this repository, however we can mention some parts here also. 
+For SSH-ing into machine and putting flag into text file, we used following way:
+
+```
+if challenge_name == "user1.txt":
+                    stdin,stdout,stderr = ssh_client.exec_command(f"rm -rf /user1.txt ; echo {flag}> /user1.txt")
+                    error_message = stderr.read()
+                    if(error_message):
+                        send_telegram_message(error_message.decode('utf-8'))
+                        print("ERROR" + error_message.decode('utf-8'))
+                    print(f"SSHing {flag} into /user1.txt")
+
+```
+
+Moreover, this script also sends Telegram messages in case of failure (when machine is down, SSH port is closed, or directory or file system is corrupted) and administrational staff reverts the vulnerable machine to clean state.
+
+We reinsert flags to machines every two minutes (without regenerating) and regenerate the flags in DB by using CTFd API every thirty mintues and on successful flag submission by team (by adding following line to 'CTFd/CTFd/api/v1/challenges.py' (pasting it just after the previous subprocess call we added for completion_checker.sh )) : 
 ``` 
 subprocess.run(['python3','/opt/CTFd/CTFd/api/v1/ctfd_scripts/db_flag_regeneration.py',f"{challenge.category}"]) 
-```  
+```
+
+db_flag_regeneration.py is a python script that also uses CTFd API to edit the flag in database to a newly generated flag.
+
+```
+import requests
+import sys
+import json
+import hashlib
+import datetime
+
+def main(argv):
+   option = argv[0]
+   if(option):
+        request_url=""
+        bearer_token="ctfd_sampletoken"
+        if(option == "--all"):
+            request_url="http://localhost:8000/api/v1/challenges"
+            print("Generating flags in DB for all machines.")
+        elif(option != ''):
+            request_url=f"http://localhost:8000/api/v1/challenges?category={option}"
+            print(f"Generating flags in DB for {option} machine")
+
+        headers = {
+            "Authorization": f"Token {bearer_token}",
+            "Content-Type":"application/json"
+        }
+
+        challenges_response = requests.get(request_url, headers=headers)
+        if challenges_response.status_code == 200:
+            challenges = challenges_response.json()["data"]
+            for challenge in challenges:
+                challenge_id=challenge["id"]
+                challenge_name=challenge["name"]
+                machine = challenge["category"]
+                flags_response=requests.get(f"http://localhost:8000/api/v1/flags?challenge_id={challenge_id}", headers=headers)
+                if flags_response.status_code == 200:
+                    flag = flags_response.json()["data"][0]
+                    flag_id = flag["id"]
+
+                    ct = str(datetime.datetime.now())
+                    pre_hash= ct + ";" + str(flag_id) + ";" + str(machine) + ";" + str (challenge_name)
+                    new_flag_hash=hashlib.md5(pre_hash.encode('utf-8')).hexdigest()
+                    new_flag=f"ICSD{{{new_flag_hash}}}"
+                    flag_change_data = {
+                        'content':f'{new_flag}',
+                        'data':'',
+                        'type':'static',
+                        'id': f'{flag_id}'
+                    }
+                    flag_regenerate_response = requests.patch(f"http://localhost:8000/api/v1/flags/{flag_id}", data=json.dumps(flag_change_data), headers=headers)
+if __name__ == "__main__":
+   main(sys.argv[1:])
+
+```
  
+
+## Conclusion
+
+This was a challenging experience for our team to set up, configure and extend a open-source product for our needs and we successfully accomplished it via the ways shown above.  
+Thank you for your interest and patience for reading this.
