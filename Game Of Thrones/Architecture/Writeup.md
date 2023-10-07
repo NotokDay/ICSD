@@ -143,6 +143,6 @@ Now Let the fun begin! Dracarys!
 
 ![dracarys.gif](images/dracarys.gif)
 
-<img src="images/dracarys.gif" width="500" height="281">
+<img src="images/dracarys.gif" width="500" height="282">
 
 **Perchance the winter has descended upon us, but the Night King, he hath not emerged in this season’s cold embrace!**
