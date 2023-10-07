@@ -1,5 +1,6 @@
 # Did the Winter really come to Westeros? Engineering the GoT CTF
 
+
 # Introduction
 
 This is supposed to be an abstraction to the technical preparation timeline of the CTF “Game Of Thrones”. The write-up will be a really objective (second-person) view (our honest confession) of our design, plans, choices, pros and cons, what we did well and didn’t throughout the process.
