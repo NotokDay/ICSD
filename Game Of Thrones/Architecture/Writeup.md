@@ -49,7 +49,7 @@ We first tried to make or find a solid Source of Trust Point(s) in the CTF Archi
 
 ![trust.gif](images/trust.gif)
 
-<img src="images/trust.gif" width="400" height="416">
+<img src="images/trust.gif" width="288" height="300">
 
 **Proxy ’em all!**
 
