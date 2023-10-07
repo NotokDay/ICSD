@@ -12,7 +12,7 @@ This is now your view as the Challenger of The Throne:
 
 This was the player’s challenge to overcome but what about the Throne, how is it choosing the Next Ruler? What are the sacrifices and risks the player needs to take while fighting their way through it? Let’s Build our Throne waiting for its Next Ruler to come!
 
-![game.jpg](Did%20the%20Winter%20really%20come%20to%20Westeros%204d56478189c94c1ea3c4d771710220bc/game.jpg)
+![game.jpg](images/game.jpg)
 
 ### Deep Note
 
