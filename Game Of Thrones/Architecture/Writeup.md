@@ -49,6 +49,8 @@ We first tried to make or find a solid Source of Trust Point(s) in the CTF Archi
 
 ![trust.gif](images/trust.gif)
 
+<img src="images/trust.gif" width="200" height="150">
+
 **Proxy ’em all!**
 
 Our initial thought was to implement some kind of a logical proxy. Theoretically, having first-hand control before and/or after players compromised the vulnerable machines.
