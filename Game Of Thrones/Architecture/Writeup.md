@@ -47,8 +47,6 @@ Time For Some Solutions!
 
 We first tried to make or find a solid Source of Trust Point(s) in the CTF Architecture so it would grant us to have complete control over the structure with the goal of keeping the system consistent and have more resistance.
 
-![trust.gif](images/trust.gif)
-
 <img src="images/trust.gif" width="288" height="300">
 
 **Proxy ’em all!**
